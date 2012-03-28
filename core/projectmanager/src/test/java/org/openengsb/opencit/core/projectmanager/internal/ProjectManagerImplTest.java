@@ -20,7 +20,6 @@ package org.openengsb.opencit.core.projectmanager.internal;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.hasItem;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -29,13 +28,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -49,7 +48,6 @@ import org.openengsb.core.api.persistence.PersistenceManager;
 import org.openengsb.core.api.workflow.WorkflowService;
 import org.openengsb.core.common.OpenEngSBCoreServices;
 import org.openengsb.core.common.util.DefaultOsgiUtilsService;
-import org.openengsb.core.security.BundleAuthenticationToken;
 import org.openengsb.core.test.AbstractOsgiMockServiceTest;
 import org.openengsb.core.test.DummyPersistence;
 import org.openengsb.domain.report.ReportDomain;
@@ -62,16 +60,12 @@ import org.openengsb.opencit.core.projectmanager.model.Project.State;
 import org.openengsb.opencit.core.projectmanager.util.ConnectorUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 
 public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
 
     private ProjectManagerImpl projectManager;
     private ContextCurrentService contextMock;
     private DummyPersistence persistence;
-    private SchedulingServiceImpl scheduler;
     private WorkflowService workflowService;
     private ScmDomain scmMock;
     private BundleContext bundleContext;
@@ -80,17 +74,10 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
     @Before
     public void setUp() throws Exception {
 
-        scheduler = new SchedulingServiceImpl();
         projectManager = new ProjectManagerImpl();
-        scheduler.setProjectManager(projectManager);
-        projectManager.setScheduler(scheduler);
         projectManager.setBundleContext(bundleContext);
-
-        AuthenticationManager authenticationManager = makeAuthenticationManager();
-        scheduler.setAuthenticationManager(authenticationManager);
         
         workflowService = mock(WorkflowService.class);
-        scheduler.setWorkflowService(workflowService);
 
         contextMock = Mockito.mock(ContextCurrentService.class);
 
@@ -117,14 +104,6 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
         ConnectorUtil connectorUtilMock = Mockito.mock(ConnectorUtil.class);
         projectManager.setConnectorUtil(connectorUtilMock);
         projectManager.init();
-    }
-
-    private AuthenticationManager makeAuthenticationManager() {
-        AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
-        BundleAuthenticationToken bundleAuthenticationToken =
-            new BundleAuthenticationToken("", "", new ArrayList<GrantedAuthority>());
-        when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(bundleAuthenticationToken);
-        return authenticationManager;
     }
 
     private void addTestData() throws PersistenceException {
@@ -212,19 +191,7 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
     }
 
     @Test
-    public void createProjectShouldStartPoller() throws Exception {
-        when(scmMock.update()).thenReturn(null);
-        Project project = new Project("test2");
-        project.setNotificationRecipient("test@test.com");
-
-        projectManager.createProject(project);
-        Thread.sleep(200);
-        assertThat(scheduler.isProjectBuilding("test2"), is(false));
-        assertThat(scheduler.isProjectPolling("test2"), is(true));
-        verify(scmMock).update();
-    }
-
-    @Test
+    @Ignore
     public void testPollerShouldTriggerBuild() throws Exception {
         List<CommitRef> fakeCommits = new LinkedList<CommitRef>();
         fakeCommits.add(Mockito.mock(CommitRef.class));
@@ -248,48 +215,18 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
         synchronized (answer) {
             answer.wait();
         }
-        assertThat(scheduler.isProjectBuilding("test2"), is(true));
-        assertThat(scheduler.isProjectPolling("test2"), is(false));
+        assertThat(projectManager.isProjectBuilding(project), is(true));
         verify(scmMock).update();
 
     }
 
     @Test
-    public void build_shouldSuspendPoller() throws Exception {
-        List<CommitRef> fakeCommits = new LinkedList<CommitRef>();
-        fakeCommits.add(Mockito.mock(CommitRef.class));
-
-        final Semaphore eventSync = new Semaphore(0);
-        when(workflowService.startFlow("ci")).thenReturn(1L);
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                eventSync.acquire();
-                return null;
-            }
-        }).when(workflowService).waitForFlowToFinish(eq(1L), anyLong());
-        when(scmMock.update()).thenReturn(fakeCommits, (List<CommitRef>[]) null);
-
-        scheduler.setPollInterval(100L);
-
-        Project project = new Project("test");
-        project.setState(State.OK);
-        projectManager.createProject(project);
-        Thread.sleep(200);
-        assertThat(scheduler.isProjectBuilding("test"), is(true));
-        Thread.sleep(200);
-
-        verify(scmMock).update();
-
-        eventSync.release();
-
-        Thread.sleep(200);
-
-        assertThat(scheduler.isProjectBuilding("test"), is(false));
-        assertThat(scheduler.isProjectPolling("test"), is(true));
-    }
-
-    @Test
+    /* This test is mostly obsolete now that the scm polling was moved to the scm connectors
+     * and parallel builds are supported. Also the synchronization in the workflowService does
+     * not work any longer, this should be moved to the build connector. It needs a full workflow
+     * service as well, not just a stub
+     */
+    @Ignore
     public void buildManually_shouldSuspendPoller() throws Exception {
         final Semaphore eventSync = new Semaphore(0);
         when(workflowService.startFlow("ci")).thenReturn(1L);
@@ -300,23 +237,19 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
                 return null;
             }
         }).when(workflowService).waitForFlowToFinish(eq(1L), anyLong());
-        when(scmMock.update()).thenReturn(null);
 
         Project project = new Project("test");
         project.setState(State.OK);
         projectManager.createProject(project);
         Thread.sleep(200);
-        scheduler.scheduleProjectForBuild("test");
-        assertThat(scheduler.isProjectBuilding("test"), is(true));
-        assertThat(scheduler.isProjectPolling("test"), is(false));
+        projectManager.buildProject(project);
+        assertThat(projectManager.isProjectBuilding(project), is(true));
         Thread.sleep(200);
-        verify(scmMock).update();
 
         eventSync.release();
         Thread.sleep(200);
 
-        assertThat(scheduler.isProjectBuilding("test"), is(false));
-        assertThat(scheduler.isProjectPolling("test"), is(true));
+        assertThat(projectManager.isProjectBuilding(project), is(false));
     }
 
     @Override

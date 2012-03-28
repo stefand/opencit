@@ -17,6 +17,7 @@
 
 package org.openengsb.opencit.core.projectmanager.internal;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +30,7 @@ import org.openengsb.core.api.model.ConnectorId;
 import org.openengsb.core.api.persistence.PersistenceException;
 import org.openengsb.core.api.persistence.PersistenceManager;
 import org.openengsb.core.api.persistence.PersistenceService;
+import org.openengsb.core.api.workflow.WorkflowService;
 import org.openengsb.core.common.OpenEngSBCoreServices;
 import org.openengsb.core.common.util.ModelUtils;
 import org.openengsb.domain.notification.Notification;
@@ -36,7 +38,6 @@ import org.openengsb.domain.report.ReportDomain;
 import org.openengsb.opencit.core.projectmanager.NoSuchProjectException;
 import org.openengsb.opencit.core.projectmanager.ProjectAlreadyExistsException;
 import org.openengsb.opencit.core.projectmanager.ProjectManager;
-import org.openengsb.opencit.core.projectmanager.SchedulingService;
 import org.openengsb.opencit.core.projectmanager.model.ConnectorConfig;
 import org.openengsb.opencit.core.projectmanager.model.Project;
 import org.openengsb.opencit.core.projectmanager.model.Project.State;
@@ -51,18 +52,16 @@ public class ProjectManagerImpl implements ProjectManager {
 
     private ContextCurrentService contextService;
 
-    private SchedulingService scheduler;
-
     private BundleContext bundleContext;
 
     private ConnectorUtil connectorUtil;
 
+    private WorkflowService workflowService;
+
+    private HashMap<String, Integer> buildCounts = new HashMap<String, Integer>();
+
     public void init() {
         persistence = persistenceManager.getPersistenceForBundle(bundleContext.getBundle());
-        List<Project> projects = getAllProjects();
-        for (Project project : projects) {
-            scheduler.setupAndStartScmPoller(project);
-        }
     }
 
     @Override
@@ -98,7 +97,6 @@ public class ProjectManagerImpl implements ProjectManager {
         createAndSetContext(project);
         createConnectors(project);
         setDefaultConnectors(project);
-        scheduler.setupAndStartScmPoller(project);
     }
 
     private void createAndSetContext(Project project) {
@@ -181,7 +179,6 @@ public class ProjectManagerImpl implements ProjectManager {
         ReportDomain reportDomain;
 
         reportDomain = OpenEngSBCoreServices.getWiringService().getDomainEndpoint(ReportDomain.class, "report");
-        scheduler.suspendScmPoller(projectId);
         reportDomain.removeCategory(projectId);
         try {
             persistence.delete(project);
@@ -202,10 +199,6 @@ public class ProjectManagerImpl implements ProjectManager {
         this.contextService = contextService;
     }
 
-    public void setScheduler(SchedulingService scheduler) {
-        this.scheduler = scheduler;
-    }
-
     public void setConnectorUtil(ConnectorUtil connectorUtil) {
         this.connectorUtil = connectorUtil;
     }
@@ -217,5 +210,51 @@ public class ProjectManagerImpl implements ProjectManager {
     @Override
     public Notification createNotification() {
         return ModelUtils.createEmptyModelObject(Notification.class);
+    }
+
+    @Override
+    public synchronized void endProjectBuild(Project project) {
+        Integer count;
+        count = buildCounts.get(project.getId());
+        count--;
+        if (count.equals(new Integer(0))) {
+            buildCounts.remove(project.getId());
+        } else {
+            buildCounts.put(project.getId(), count);
+        }
+    }
+
+    @Override
+    public synchronized boolean isProjectBuilding(Project project) {
+        return buildCounts.containsKey(project.getId());
+    }
+
+    @Override
+    public synchronized void startProjectBuild(Project project) {
+        Integer count;
+        count = buildCounts.get(project.getId());
+        if (count == null) {
+            count = new Integer(0);
+        }
+        count++;
+        buildCounts.put(project.getId(), count);
+    }
+
+    @Override
+    public void buildProject(Project project) {
+        String oldctx = ContextHolder.get().getCurrentContextId();
+        if (!oldctx.equals(project.getId())) {
+            ContextHolder.get().setCurrentContextId(project.getId());
+        }
+
+        workflowService.startFlow("ci");
+
+        if (!oldctx.equals(project.getId())) {
+            ContextHolder.get().setCurrentContextId(oldctx);
+        }
+    }
+
+    public void setWorkflowService(WorkflowService workflowService) {
+        this.workflowService = workflowService;
     }
 }

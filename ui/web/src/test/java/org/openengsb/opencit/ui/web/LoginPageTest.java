@@ -37,7 +37,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.openengsb.core.api.context.ContextCurrentService;
 import org.openengsb.opencit.core.projectmanager.ProjectManager;
-import org.openengsb.opencit.core.projectmanager.SchedulingService;
 import org.ops4j.pax.wicket.api.ApplicationLifecycleListener;
 import org.ops4j.pax.wicket.test.spring.ApplicationContextMock;
 import org.ops4j.pax.wicket.test.spring.PaxWicketSpringBeanComponentInjector;
@@ -69,7 +68,6 @@ public class LoginPageTest {
         mockAuthentication();
         contextMock.putBean("projectManager", mock(ProjectManager.class));
         contextMock.putBean(mock(ContextCurrentService.class));
-        contextMock.putBean("scheduler", mock(SchedulingService.class));
         ApplicationLifecycleListener listener = new DummyListener();
 
         WebApplication app = new WicketApplication(listener) {

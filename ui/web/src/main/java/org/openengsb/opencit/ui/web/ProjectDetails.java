@@ -48,7 +48,6 @@ import org.openengsb.domain.report.ReportDomain;
 import org.openengsb.domain.report.Report;
 import org.openengsb.opencit.core.projectmanager.NoSuchProjectException;
 import org.openengsb.opencit.core.projectmanager.ProjectManager;
-import org.openengsb.opencit.core.projectmanager.SchedulingService;
 import org.openengsb.opencit.core.projectmanager.model.Project;
 import org.openengsb.opencit.ui.web.model.ReportModel;
 import org.openengsb.opencit.ui.web.model.SpringBeanProvider;
@@ -61,9 +60,6 @@ public class ProjectDetails extends BasePage implements SpringBeanProvider<Proje
 
     @PaxWicketBean
     private ProjectManager projectManager;
-
-    @PaxWicketBean
-    private SchedulingService scheduler;
 
     private Image projectStateImage;
 
@@ -107,7 +103,7 @@ public class ProjectDetails extends BasePage implements SpringBeanProvider<Proje
             }
         }));
         Project project = projectManager.getCurrentContextProject();
-        String image = StateUtil.getImage(project, scheduler);
+        String image = StateUtil.getImage(project, projectManager);
         ContextRelativeResource stateResource = new ContextRelativeResource(image);
         stateResource.setCacheable(false);
         projectStateImage = new Image("project.state", stateResource);
@@ -142,14 +138,15 @@ public class ProjectDetails extends BasePage implements SpringBeanProvider<Proje
 
             @Override
             public void onSubmit() {
-                scheduler.scheduleProjectForBuild(ContextHolder.get().getCurrentContextId());
+                Project project = projectManager.getCurrentContextProject();
+                projectManager.buildProject(project);
                 setResponsePage(ProjectDetails.class);
             }
 
         };
         flowButton.setOutputMarkupId(true);
 
-        flowButton.setEnabled(!scheduler.isProjectBuilding(projectId));
+        flowButton.setEnabled(!projectManager.isProjectBuilding(project));
         form.add(flowButton);
         projectPanel.add(form);
 

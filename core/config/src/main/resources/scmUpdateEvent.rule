@@ -1,0 +1,4 @@
+when
+  e : ScmUpdateEvent ()
+then
+  WorkflowHelper.startFlow(kcontext.getKnowledgeRuntime(), "ci");

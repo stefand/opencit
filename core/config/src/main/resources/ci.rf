@@ -96,7 +96,8 @@ try {
 File deleteMe = (File) kcontext.getVariable("deleteHack");
 if (deleteMe != null) {
     FileUtils.deleteDirectory(deleteMe);
-}</action>
+}
+projectManager.endProjectBuild(project);</action>
     </actionNode>
     <actionNode id="128" name="setStateToSuccess" x="83" y="880" width="123" height="64" >
         <action type="expression" dialect="java" >kcontext.setVariable("processSuccess", true);</action>
@@ -132,6 +133,10 @@ kcontext.setVariable("deleteHack", f);
 build.build(m, processId2);</action>
     </actionNode>
     <join id="20" name="jointoSendReport" x="283" y="1072" width="123" height="49" type="2" />
+    <actionNode id="144" name="Mark Project Building" x="74" y="106" width="80" height="48" >
+        <action type="expression" dialect="java" >Project project = projectManager.getCurrentContextProject();
+projectManager.startProjectBuild(project);</action>
+    </actionNode>
     <join id="108" name="Join" x="406" y="544" width="80" height="40" type="1" />
     <eventNode id="107" name="BuildSuccess" x="25" y="448" width="187" height="64" variableName="buildEndEvent" scope="external" >
       <eventFilters>
@@ -159,7 +164,7 @@ build.build(m, processId2);</action>
     <connection from="128" to="140" />
     <connection from="129" to="6" />
     <connection from="143" to="142" />
-    <connection from="1" to="142" />
+    <connection from="144" to="142" />
     <connection from="20" to="129" />
     <connection from="138" to="128" />
     <connection from="132" to="133" />
@@ -174,6 +179,7 @@ build.build(m, processId2);</action>
     <connection from="137" to="20" />
     <connection from="134" to="20" />
     <connection from="140" to="20" />
+    <connection from="1" to="144" />
     <connection from="120" to="108" />
     <connection from="119" to="108" />
     <connection from="16" to="125" />

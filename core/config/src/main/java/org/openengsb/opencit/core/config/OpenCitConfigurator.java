@@ -40,6 +40,7 @@ import org.openengsb.core.api.workflow.RuleBaseException;
 import org.openengsb.core.api.workflow.RuleManager;
 import org.openengsb.core.api.workflow.model.RuleBaseElementId;
 import org.openengsb.core.api.workflow.model.RuleBaseElementType;
+import org.openengsb.core.workflow.WorkflowHelper;
 import org.openengsb.domain.build.BuildDomain;
 import org.openengsb.domain.build.BuildFailEvent;
 import org.openengsb.domain.build.BuildStartEvent;
@@ -56,6 +57,7 @@ import org.openengsb.domain.report.ReportDomain;
 import org.openengsb.domain.report.Report;
 import org.openengsb.domain.report.ReportPart;
 import org.openengsb.domain.scm.ScmDomain;
+import org.openengsb.domain.scm.ScmUpdateEvent;
 import org.openengsb.domain.test.TestDomain;
 import org.openengsb.domain.test.TestFailEvent;
 import org.openengsb.domain.test.TestStartEvent;
@@ -114,6 +116,8 @@ public class OpenCitConfigurator {
         ruleManager.addImport(FileUtils.class.getCanonicalName());
         ruleManager.addImport(Log.class.getCanonicalName());
         ruleManager.addImport(LogFactory.class.getCanonicalName());
+        ruleManager.addImport(ScmUpdateEvent.class.getCanonicalName());
+        ruleManager.addImport(WorkflowHelper.class.getCanonicalName());
     }
 
     private void addScmGlobalsAndImports() throws RuleBaseException {
@@ -198,7 +202,7 @@ public class OpenCitConfigurator {
 
     private void addRules() {
         List<String> rules =
-            Arrays.asList(new String[]{ "reportEvent", });
+            Arrays.asList(new String[]{ "reportEvent", "scmUpdateEvent" });
         for (String rule : rules) {
             addRule(rule);
         }

@@ -40,6 +40,14 @@ public interface ProjectManager {
 
     void deleteProject(String projectId) throws NoSuchProjectException;
 
+    void startProjectBuild(Project project);
+
+    void endProjectBuild(Project project);
+
+    boolean isProjectBuilding(Project project);
+
+    void buildProject(Project project);
+
     // FIXME: Remove this and load the EkbService properly into the workflow
     Notification createNotification();
 }

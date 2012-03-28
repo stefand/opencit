@@ -19,7 +19,7 @@ package org.openengsb.opencit.ui.web;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,7 +49,6 @@ import org.openengsb.domain.report.ReportDomain;
 import org.openengsb.domain.report.Report;
 import org.openengsb.domain.report.ReportPart;
 import org.openengsb.opencit.core.projectmanager.ProjectManager;
-import org.openengsb.opencit.core.projectmanager.SchedulingService;
 import org.openengsb.opencit.core.projectmanager.model.Project;
 import org.openengsb.opencit.core.projectmanager.model.Project.State;
 
@@ -68,16 +67,6 @@ public class ProjectDetailsPageTest extends AbstractCitPageTest {
         mockedBeansMap.put("reportDomain", reportMock);
         workflowService = mock(WorkflowService.class);
         mockedBeansMap.put("workflowService", workflowService);
-        SchedulingService scheduler = mock(SchedulingService.class);
-        mockedBeansMap.put("scheduler", scheduler);
-        Answer<?> answer = new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                workflowService.startFlow("ci");
-                return null;
-            }
-        };
-        doAnswer(answer).when(scheduler).scheduleProjectForBuild(anyString());
         return mockedBeansMap;
     }
 
@@ -90,6 +79,15 @@ public class ProjectDetailsPageTest extends AbstractCitPageTest {
         testProject.setState(State.OK);
         when(projectManager.getCurrentContextProject()).thenReturn(testProject);
         when(projectManager.getProject("test")).thenReturn(testProject);
+
+        Answer<?> answer = new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                workflowService.startFlow("ci");
+                return null;
+            }
+        };
+        doAnswer(answer).when(projectManager).buildProject(any(Project.class));
 
         WiringService wiringService = Mockito.mock(WiringService.class);
         when(wiringService.getDomainEndpoint(ReportDomain.class, "report")).thenReturn(reportMock);

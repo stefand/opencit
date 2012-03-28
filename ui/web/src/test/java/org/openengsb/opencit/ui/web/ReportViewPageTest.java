@@ -43,7 +43,6 @@ import org.openengsb.domain.report.ReportPart;
 import org.openengsb.domain.report.SimpleReportPart;
 import org.openengsb.opencit.core.projectmanager.NoSuchProjectException;
 import org.openengsb.opencit.core.projectmanager.ProjectManager;
-import org.openengsb.opencit.core.projectmanager.SchedulingService;
 import org.openengsb.opencit.core.projectmanager.model.Project;
 import org.openengsb.opencit.ui.web.model.ProjectModel;
 
@@ -70,8 +69,6 @@ public class ReportViewPageTest extends AbstractCitPageTest {
         projectManager = mock(ProjectManager.class);
         mockedBeansMap.put("projectManager", projectManager);
         mockedBeansMap.put("reportDomain", reportMock);
-        SchedulingService scheduler = mock(SchedulingService.class);
-        mockedBeansMap.put("scheduler", scheduler);
         return mockedBeansMap;
     }
 

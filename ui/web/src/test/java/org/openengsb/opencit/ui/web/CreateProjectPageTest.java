@@ -41,7 +41,6 @@ import org.openengsb.core.services.internal.ConnectorManagerImpl;
 import org.openengsb.domain.report.ReportDomain;
 import org.openengsb.domain.scm.ScmDomain;
 import org.openengsb.opencit.core.projectmanager.ProjectManager;
-import org.openengsb.opencit.core.projectmanager.SchedulingService;
 import org.openengsb.opencit.core.projectmanager.util.ConnectorUtil;
 
 public class CreateProjectPageTest extends AbstractCitPageTest {
@@ -67,8 +66,6 @@ public class CreateProjectPageTest extends AbstractCitPageTest {
         mockedBeansMap.put("contextCurrentService", contextSerice);
         mockedBeansMap.put("projectManager", projectManager);
         mockedBeansMap.put("reportDomain", mock(ReportDomain.class));
-        SchedulingService scheduler = mock(SchedulingService.class);
-        mockedBeansMap.put("scheduler", scheduler);
         connectorManager = new ConnectorManagerImpl();
         mockedBeansMap.put("connectorManager", connectorManager);
         connectorUtil = new ConnectorUtil();

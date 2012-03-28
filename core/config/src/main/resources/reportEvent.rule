@@ -22,4 +22,3 @@ when
 then
   String reportIdValue = (String) p.getVariable("reportId");
   report.processEvent(reportIdValue, e); 
-
