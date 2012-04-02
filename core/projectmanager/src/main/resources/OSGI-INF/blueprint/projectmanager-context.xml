@@ -38,6 +38,7 @@
     <property name="bundleContext" ref="blueprintBundleContext" />
     <property name="connectorUtil" ref="connectorUtil" />
     <property name="workflowService" ref="workflowService" />
+    <property name="osgiUtilsService" ref="osgiUtilsService" />
   </bean>
 
   <bean id="connectorUtil" class="org.openengsb.opencit.core.projectmanager.util.ConnectorUtil">

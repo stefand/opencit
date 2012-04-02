@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.openengsb.core.api.ConnectorValidationFailedException;
+import org.openengsb.core.api.OsgiUtilsService;
+import org.openengsb.core.api.WiringService;
 import org.openengsb.core.api.context.Context;
 import org.openengsb.core.api.context.ContextCurrentService;
 import org.openengsb.core.api.context.ContextHolder;
@@ -31,7 +33,6 @@ import org.openengsb.core.api.persistence.PersistenceException;
 import org.openengsb.core.api.persistence.PersistenceManager;
 import org.openengsb.core.api.persistence.PersistenceService;
 import org.openengsb.core.api.workflow.WorkflowService;
-import org.openengsb.core.common.OpenEngSBCoreServices;
 import org.openengsb.core.common.util.ModelUtils;
 import org.openengsb.domain.notification.Notification;
 import org.openengsb.domain.report.ReportDomain;
@@ -59,6 +60,8 @@ public class ProjectManagerImpl implements ProjectManager {
     private WorkflowService workflowService;
 
     private HashMap<String, Integer> buildCounts = new HashMap<String, Integer>();
+
+    private OsgiUtilsService osgiUtilsService;
 
     public void init() {
         persistence = persistenceManager.getPersistenceForBundle(bundleContext.getBundle());
@@ -178,7 +181,8 @@ public class ProjectManagerImpl implements ProjectManager {
         Project project = getProject(projectId);
         ReportDomain reportDomain;
 
-        reportDomain = OpenEngSBCoreServices.getWiringService().getDomainEndpoint(ReportDomain.class, "report");
+        WiringService ws = osgiUtilsService.getService(WiringService.class);
+        reportDomain = ws.getDomainEndpoint(ReportDomain.class, "report");
         reportDomain.removeCategory(projectId);
         try {
             persistence.delete(project);
@@ -256,5 +260,9 @@ public class ProjectManagerImpl implements ProjectManager {
 
     public void setWorkflowService(WorkflowService workflowService) {
         this.workflowService = workflowService;
+    }
+
+    public void setOsgiUtilsService(OsgiUtilsService osgiUtilsService) {
+        this.osgiUtilsService = osgiUtilsService;
     }
 }

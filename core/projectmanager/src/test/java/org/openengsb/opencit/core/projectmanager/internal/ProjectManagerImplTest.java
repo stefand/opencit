@@ -46,7 +46,6 @@ import org.openengsb.core.api.context.ContextCurrentService;
 import org.openengsb.core.api.persistence.PersistenceException;
 import org.openengsb.core.api.persistence.PersistenceManager;
 import org.openengsb.core.api.workflow.WorkflowService;
-import org.openengsb.core.common.OpenEngSBCoreServices;
 import org.openengsb.core.common.util.DefaultOsgiUtilsService;
 import org.openengsb.core.test.AbstractOsgiMockServiceTest;
 import org.openengsb.core.test.DummyPersistence;
@@ -70,12 +69,14 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
     private ScmDomain scmMock;
     private BundleContext bundleContext;
     private ReportDomain reportMock;
+    private DefaultOsgiUtilsService serviceUtils;
 
     @Before
     public void setUp() throws Exception {
 
         projectManager = new ProjectManagerImpl();
         projectManager.setBundleContext(bundleContext);
+        projectManager.setOsgiUtilsService(serviceUtils);
         
         workflowService = mock(WorkflowService.class);
 
@@ -254,9 +255,8 @@ public class ProjectManagerImplTest extends AbstractOsgiMockServiceTest {
 
     @Override
     protected void setBundleContext(BundleContext bundleContext) {
-        DefaultOsgiUtilsService serviceUtils = new DefaultOsgiUtilsService();
+        serviceUtils = new DefaultOsgiUtilsService();
         serviceUtils.setBundleContext(bundleContext);
-        OpenEngSBCoreServices.setOsgiServiceUtils(serviceUtils);
         registerService(serviceUtils, new Hashtable<String, Object>(), OsgiUtilsService.class);
         this.bundleContext = bundleContext;
     }
