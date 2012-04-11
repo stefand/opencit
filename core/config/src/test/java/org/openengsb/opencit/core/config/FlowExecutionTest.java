@@ -141,7 +141,7 @@ public class FlowExecutionTest extends AbstractOsgiMockServiceTest {
         service.processEvent(new DeployFailEvent(pid, "deployoutput"));
 
         service.waitForFlowToFinish(pid);
-        verify(notificationDomainMock).notify(any(Notification.class));
+        verify(notificationDomainMock).notify(any(Hashtable.class));
     }
 
     @Override
