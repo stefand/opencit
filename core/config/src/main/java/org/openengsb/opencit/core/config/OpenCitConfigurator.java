@@ -1,3 +1,4 @@
+BLUUBBAA!
 /**
  * Licensed to the Austrian Association for Software Tool Integration (AASTI)
  * under one or more contributor license agreements. See the NOTICE file
